@@ -5,6 +5,8 @@ from json import dumps as dumpjson
 
 app = Sanic("WebsocketApp")
 
+app.ctx.wsConnectionPool = []
+
 @app.get('/vampire-roller')
 async def vampireTop(request: Request):
     return await file('vampire.html')
@@ -124,13 +126,14 @@ async def vampireRollApi(request: Request):
 @app.websocket("/ws/vampire")
 async def feed(request: Request, ws: Websocket):
     
-    app.ctx.ws = ws
+    app.ctx.wsConnectionPool.append(ws)
 
     async for msg in ws:
         print("Received: " + msg)
 
 async def report(username, result):
-    await app.ctx.ws.send(dumpjson({'username': username, 'result': result}))
+    for ws in app.ctx.wsConnectionPool:
+        await ws.send(dumpjson({'username': username, 'result': result}))
 
 if __name__ == '__main__':
     app.run()
