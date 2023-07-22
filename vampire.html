@@ -1,0 +1,256 @@
+<html>
+    <head>
+        <title>Roule ton vampire!</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <style>
+            .die {
+                border: 1px solid transparent;
+            }
+            #roll-display .die.normal {
+                cursor: pointer;
+            }
+            .die.normal.selected {
+                border: 1px solid black;
+                border-radius: 3px;
+            }
+            #history .die {
+                width: 25px;
+                height: 43px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root">
+            <div id="roller">
+                <label for="input-username">User Name:</label>
+                <input id="input-username" type="text" name="username"></input>
+                <label for="select-pool">Dice Pool:</label>
+                <select name="pool" id="select-pool">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+                <label for="select-pool">Hunger:</label>
+                <select name="hunger" id="select-hunger">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+                <label for="select-difficulty">Difficulty:</label>
+                <select name="difficulty" id="select-difficulty">
+                    <option value="0">-</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+                <input id="submit-roll" type="button" value="Roll" name="button-roll" onclick="submitRoll()"></input>
+                <div id="roll-display">
+                    <input id="submit-reroll" type="button" value="Re-roll" name="button-reroll" disabled="true" onclick="submitReroll()"></input>                
+                </div>
+            </div>
+            <div id="history">
+            </div>
+        </div>
+        <script type="text/javascript">
+            let currentPool = []
+
+            function toQueryString(obj){
+                let elems = []
+                for(let k in obj){
+                    if(obj[k]) elems.push(`${k}=${obj[k]}`)
+                }
+                if(elems.length > 0){
+                    return `?${elems.join('&')}`
+                }else{
+                    return ''
+                }
+            }
+
+            function widgetHungerDie(d){
+                let image = [
+                        'images/bestial-fail.png',
+                        'images/red-fail.png',
+                        'images/red-fail.png',
+                        'images/red-fail.png',
+                        'images/red-fail.png',
+                        'images/red-success.png',
+                        'images/red-success.png',
+                        'images/red-success.png',
+                        'images/red-success.png',
+                        'images/red-crit.png'
+                    ][d-1]
+                return `<img class="die hunger" src="${image}" />`
+            }
+
+            function widgetNormalDie(d, clickable=false){
+                let image = [
+                        'images/normal-fail.png',
+                        'images/normal-fail.png',
+                        'images/normal-fail.png',
+                        'images/normal-fail.png',
+                        'images/normal-fail.png',
+                        'images/normal-success.png',
+                        'images/normal-success.png',
+                        'images/normal-success.png',
+                        'images/normal-success.png',
+                        'images/normal-crit.png'
+                    ][d-1]
+                let clickHandler = clickable? 'onclick="clickNormalDie(this)"' : ''
+                return `<img class="die normal unselected" src="${image}" ${clickHandler}/>`
+            }
+
+            function widgetComment(c){
+                return `<p class="comment">${c}</p>`
+            }
+
+            function displayRoll(root, result){
+                let disp = document.getElementById(root)
+
+                elems = []
+
+                for(d of result.hungerDice){
+                    elems.push(widgetHungerDie(d))
+                }
+                for(d of result.normalDice){
+                    elems.push(widgetNormalDie(d, true))
+                }
+                for(c of result.comment){
+                    elems.push(widgetComment(c))
+                }
+
+                elems.push('<input id="submit-reroll" type="button" value="Re-roll" name="button-reroll" disabled="true" onclick="submitReroll()">')
+
+                disp.innerHTML = elems.join('')
+            }
+
+            function displayHistory(username, result){
+                let history = document.getElementById('history')
+                username = username || 'someone'
+
+                elems = [`<div><p>${username} rolled:</p>`]
+
+                for(d of result.hungerDice){
+                    elems.push(widgetHungerDie(d))
+                }
+                for(d of result.normalDice){
+                    elems.push(widgetNormalDie(d, false))
+                }
+                elems.push('</div>')
+
+                history.innerHTML = elems.join('') + history.innerHTML
+            }
+
+            async function clickNormalDie(elem){
+                console.log(elem)
+                if(elem.classList.contains('selected')){
+                    elem.classList.replace('selected', 'unselected')
+                } else {
+                    let selected = document.getElementsByClassName("die normal selected");
+                    if(selected.length < 3){
+                        elem.classList.replace('unselected', 'selected')
+                    }
+                }
+
+                let selected = document.getElementsByClassName("die normal selected");
+                console.log(selected)
+                disableReroll(selected.length === 0)
+            }
+
+            function disableReroll(v){
+                reroll = document.getElementById('submit-reroll')
+                console.log(reroll, v)
+                reroll.disabled = v
+            }
+
+            async function submitRoll(){
+                let username = document.getElementById('input-username').value
+                let hunger = document.getElementById('select-hunger').value
+                let pool = document.getElementById('select-pool').value
+                let difficulty = document.getElementById('select-difficulty').value
+                let params = {
+                    username,
+                    hunger,
+                    pool,
+                    difficulty
+                }
+                let response = await fetch(`/api/roll/vampire${toQueryString(params)}`)
+                let json = await response.json()
+                
+                currentPool = [...json.result.hungerDice, ...json.result.normalDice]
+
+                displayRoll('roll-display', json.result)
+                disableReroll(true)
+            }
+
+            function getRerollIndices(){
+                let disp = document.getElementById('roll-display')
+                let dices = disp.getElementsByClassName('die')
+                let indices = []
+                console.log(dices)
+                for(let i = 0; i < dices.length; i++){
+                    console.log(i)
+                    console.log(dices[i])
+                    if(dices[i].classList.contains('selected')){
+                        indices.push(i+1)
+                    }
+                }
+                return indices
+            }
+
+            async function submitReroll(){
+                let username = document.getElementById('input-username').value
+                let hunger = document.getElementById('select-hunger').value
+                let pool = document.getElementById('select-pool').value
+                let difficulty = document.getElementById('select-difficulty').value
+                let ppool = currentPool.join(',')
+                let reroll = getRerollIndices().join(',')
+                let params = {
+                    username,
+                    hunger,
+                    pool,
+                    difficulty,
+                    ppool,
+                    reroll
+                }
+                let response = await fetch(`/api/roll/vampire${toQueryString(params)}`)
+                let json = await response.json()
+                
+                displayRoll('roll-display', json.result)
+                disableReroll(true)
+            }
+
+
+            async function setupWebSocket(){
+                const socket = new WebSocket(`ws://${window.location.host}/ws/vampire`)
+
+                socket.addEventListener('open', (event) => {
+                    socket.send('Hello, server!')
+                })
+
+                socket.addEventListener('message', (event) => {
+                    let {username, result} = JSON.parse(event.data)
+                    displayHistory(username, result)
+                })
+            }
+
+            setupWebSocket()
+        </script>
+    </body>
+</html>
