@@ -133,7 +133,10 @@ async def feed(request: Request, ws: Websocket):
 
 async def report(username, result):
     for ws in app.ctx.wsConnectionPool:
-        await ws.send(dumpjson({'username': username, 'result': result}))
+        try:
+            await ws.send(dumpjson({'username': username, 'result': result}))
+        except Exception:
+            app.ctx.wsConnectionPool.remove(ws)
 
 if __name__ == '__main__':
     app.run()
