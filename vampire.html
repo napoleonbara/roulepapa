@@ -61,6 +61,7 @@
                     <option value="10">10</option>
                 </select>
                 <input id="submit-roll" type="button" value="Roll" name="button-roll" onclick="submitRoll()"></input>
+                <input id="submit-hunger-test" type="button" value="Hunger Test" name="button-hunger" onclick="submitHunger()"></input>
                 <div id="roll-display">
                     <input id="submit-reroll" type="button" value="Re-roll" name="button-reroll" disabled="true" onclick="submitReroll()"></input>                
                 </div>
@@ -184,6 +185,26 @@
                 let hunger = document.getElementById('select-hunger').value
                 let pool = document.getElementById('select-pool').value
                 let difficulty = document.getElementById('select-difficulty').value
+                let params = {
+                    username,
+                    hunger,
+                    pool,
+                    difficulty
+                }
+                let response = await fetch(`/api/roll/vampire${toQueryString(params)}`)
+                let json = await response.json()
+                
+                currentPool = [...json.result.hungerDice, ...json.result.normalDice]
+
+                displayRoll('roll-display', json.result)
+                disableReroll(true)
+            }
+
+            async function submitHunger(){
+                let username = document.getElementById('input-username').value
+                let hunger = "0"
+                let pool = "1"
+                let difficulty = "1"
                 let params = {
                     username,
                     hunger,
