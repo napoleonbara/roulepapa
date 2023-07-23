@@ -1,7 +1,8 @@
 from sanic import Sanic, Request, Websocket, file, text, json
 from random import randint
 from json import dumps as dumpjson
-
+from dotenv import load_dotenv
+import os
 
 app = Sanic("WebsocketApp")
 
@@ -139,4 +140,5 @@ async def report(username, result):
             app.ctx.wsConnectionPool.remove(ws)
 
 if __name__ == '__main__':
-    app.run()
+    load_dotenv()
+    app.run(host=os.environ['ROULEPAPA_HOST'], port=int(os.environ['ROULEPAPA_PORT']))
