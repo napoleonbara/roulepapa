@@ -16,6 +16,10 @@ async def vampireTop(request: Request):
 async def image(request: Request, path: str):
     return await file('images/'+path)
 
+@app.get('/sounds/<path>')
+async def sound(request: Request, path: str):
+    return await file('sounds/'+path)
+
 def d10():
     return randint(1,10)
 

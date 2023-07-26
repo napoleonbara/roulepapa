@@ -69,8 +69,16 @@
             <div id="history">
             </div>
         </div>
+        <audio id="audio-dice-roll">
+            <source src="sounds/dice-roll.mp3" type="audio/mpeg">
+        </audio>
         <script type="text/javascript">
             let currentPool = []
+
+            function playDiceRollSound(){
+                let audio = document.getElementById('audio-dice-roll')
+                audio.play()
+            }
 
             function toQueryString(obj){
                 let elems = []
@@ -122,6 +130,7 @@
             }
 
             function displayRoll(root, result){
+                playDiceRollSound()
                 let disp = document.getElementById(root)
 
                 elems = []
@@ -142,6 +151,7 @@
             }
 
             function displayHistory(username, result){
+                playDiceRollSound()
                 let history = document.getElementById('history')
                 username = username || 'someone'
 
@@ -176,7 +186,6 @@
 
             function disableReroll(v){
                 reroll = document.getElementById('submit-reroll')
-                console.log(reroll, v)
                 reroll.disabled = v
             }
 
