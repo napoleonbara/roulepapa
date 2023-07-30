@@ -10,11 +10,19 @@ app.ctx.wsConnectionPool = []
 
 @app.get('/vampire-roller')
 async def vampireTop(request: Request):
-    return await file('vampire.html')
+    return await file('vampire2.html')
 
 @app.get('/images/<path>')
-async def image(request: Request, path: str):
+async def css(request: Request, path: str):
     return await file('images/'+path)
+
+@app.get('/css/<path>')
+async def image(request: Request, path: str):
+    return await file('css/'+path)
+
+@app.get('/js/<path>')
+async def javascript(request: Request, path: str):
+    return await file('js/'+path)
 
 @app.get('/sounds/<path>')
 async def sound(request: Request, path: str):

@@ -1,0 +1,48 @@
+<html>
+    <head>
+        <title>Roule ton vampire!</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" href="/css/vampire-styles.css">
+    </head>
+    <body>
+        <div id="root"></root>
+        <script type="module" src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+        <script type="module" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+
+        <script type="module" src="js/vampire-die.js"></script>
+        <script type="module" src="js/vampire-roller.js"></script>
+        <script type="module">
+            import VampireRoller from "./js/vampire-roller.js"
+            //import ReactDOM from 'https://unpkg.com/react-dom@18/umd/react-dom.development.js'
+            
+            let root = document.getElementById('root')
+            
+            // const [userName, setUserName] = React.useState('');
+            // const [pool, setPool] = React.useState(1);
+            // const [hunger, setHunger] = React.useState(0);
+            // const [difficulty, setDifficulty] = React.useState(0);
+            // const [rerollDisabled, setRerollDisabled] = React.useState(true);
+            // const [rollResult, setRollResult] = React.useState([]);
+            // const [history, setHistory] = React.useState([]);
+            // const [muted, setMuted] = React.useState(false);
+
+            ReactDOM.createRoot(root).render(VampireRoller({
+            
+                    backend: '/api/roll/vampire',
+                    websocket: `ws://${window.location.host}/ws/vampire`,
+                    sound_effect: '/sounds/dice-roll.mp3',
+                    images: {
+                        'bestial-fail':   '/images/bestial-fail.png',
+                        'red-fail':       'images/red-fail.png',
+                        'red-success':    'images/red-success.png',
+                        'red-crit':       'images/red-crit.png',
+                        'normal-fail':    'images/normal-fail.png',
+                        'normal-success': 'images/normal-success.png',
+                        'normal-crit':    'images/normal-crit.png'                    
+                    }
+                }),
+                root)
+        </script>
+    </body>
+</html>

@@ -3,22 +3,9 @@
         <title>Roule ton vampire!</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width">
-        <style>
-            .die {
-                border: 1px solid transparent;
-            }
-            #roll-display .die.normal {
-                cursor: pointer;
-            }
-            .die.normal.selected {
-                border: 1px solid black;
-                border-radius: 3px;
-            }
-            #history .die {
-                width: 25px;
-                height: 43px;
-            }
-        </style>
+        <link rel="stylesheet" href="/css/vampire-styles.css">
+        <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     </head>
     <body>
         <div id="root">
@@ -40,6 +27,7 @@
                 </select>
                 <label for="select-pool">Hunger:</label>
                 <select name="hunger" id="select-hunger">
+                    <option value="0">0</option>
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>
@@ -72,7 +60,13 @@
         <audio id="audio-dice-roll">
             <source src="sounds/dice-roll.mp3" type="audio/mpeg">
         </audio>
+        <script type="text/javascript" src="js/vampire-die.js"></script>
         <script type="text/javascript">
+            
+            let history = document.getElementById('history')
+            ReactDOM.createRoot(history).render(Display())
+
+
             let currentPool = []
 
             function playDiceRollSound(){
