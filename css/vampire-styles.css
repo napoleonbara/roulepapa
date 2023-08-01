@@ -1,7 +1,7 @@
 .die {
     border: 1px solid transparent;
 }
-#roll-display .die.normal {
+.die.normal {
     cursor: pointer;
 }
 .die.normal.selected {

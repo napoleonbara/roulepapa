@@ -1,5 +1,7 @@
 
 import React, {useState} from 'react'
+import mutedIcon from '../images/muted.svg'
+import speakerIcon from '../images/speaker.svg'
 
 export default function MuteButton({init, onClick}){
 
@@ -10,11 +12,9 @@ export default function MuteButton({init, onClick}){
         onClick(!muted)
     }
 
-	const cls = `mute-button ${muted?'muted':''}`
-	const src = `/images/${muted?'muted.svg':'speaker.svg'}`
 	return <img 
-        className={cls} 
-        src={src}
+        className={`mute-button ${muted?'muted':''}`} 
+        src={muted ? mutedIcon : speakerIcon}
         onClick={handleClick}
         width="36" height="36"
         style={{cursor: 'pointer'}}
