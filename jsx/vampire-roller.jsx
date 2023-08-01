@@ -1,126 +1,161 @@
 
-import React, {useState} from "react"
+import React, {useState, useEffect} from 'react'
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 
-// TODO: put in utils.js
-function toQueryString(obj){
-    let elems = []
-    for(let k in obj){
-        if(obj[k]) elems.push(`${k}=${obj[k]}`)
-    }
-    if(elems.length > 0){
-        return `?${elems.join('&')}`
-    }else{
-        return ''
-    }
-}
+import {toQueryString, range} from './utils'
+import MuteButton from './mute-button'
+import NumberSelect from './number-select'
+import WebsocketConnection from './websocket-connection'
+import HistoryDisplay from './history-display'
+import RollDisplay from './roll-display'
 
-function MuteButton({state, onClick}){
+import {getComments, rollHungerDie, rollNormalDie} from './vampire-dice-utils'
 
-	const [muted, setMuted] = useState(state)
-
-	const cls = `mute-button ${muted?'muted':''}`
-	const src = `/images/${muted?'muted.png':'unmuted.png'}`
-	return <img className={cls} src={src} onClick={onClick} />
-}
-
-function NumberSelect(){
-	return <div></div>
-}
-
-function RollDisplay(){
-	return <div></div>
-}
-
-function HistoryDisplay(){
-	return <div></div>
-}
-
-function WebsocketConnection(){
-	return <div></div>
-}
 
 export default function VampireRoller({
 	sound_effect,
 	websocket,
 	backend
 }){
-//	const {useState} = React
-	console.log(React)
-	const [userName, setUserName] = React.useState('')
-	const [pool, setPool] = React.useState(1)
-	const [hunger, setHunger] = React.useState(0)
-	const [difficulty, setDifficulty] = React.useState(0)
-	const [rerollDisabled, setRerollDisabled] = React.useState(true)
-	const [rollResult, setRollResult] = React.useState([])
-	const [history, setHistory] = React.useState([])
-	const [muted, setMuted] = React.useState(false)
+	const [userName, setUserName] = useState('')
+	const [pool, setPool] = useState(1)
+	const [hunger, setHunger] = useState(0)
+	const [difficulty, setDifficulty] = useState(0)
+	const [rerollDisabled, setRerollDisabled] = useState(true)
+	const [rollResult, setRollResult] = useState([])
+	const [history, setHistory] = useState([])
+	const [muted, setMuted] = useState(false)
 
+    const { sendMessage, lastMessage, readyState } = useWebSocket(websocket);
 
-	async function submitRoll(){
-        await handleRoll({
-            userName,
-            hunger,
-            pool,
-            difficulty
-        })
+    useEffect(() => {
+        if (lastMessage !== null) {
+            const data = JSON.parse(lastMessage.data)
+            setHistory((prev) => [data, ...prev].slice(0, 10));
+        }
+    }, [lastMessage, setHistory]);
+
+	async function submitRoll(pool, hunger, difficulty, userName){
+        const diceResult = [
+            ...range(hunger).map(rollHungerDie),
+            ...range(Math.max(pool-hunger, 0)).map(rollNormalDie)
+        ].map(v => { return {value: v, selected: false} })
+
+        const comments = getComments(diceResult, difficulty)
+
+        handleRoll({result: diceResult, reroll: true, comments, userName})
 	}
 
-	async function submitHunger(){
-        await handleRoll({
-            userName,
-            hunger: 0,
-            pool: 1,
-            difficulty: 1,
-            hungerRoll: true 
-        })
+	async function submitHunger(userName){
+        const dieResult = ['bestial-fail', 'normal-success'][Math.floor(Math.random()*2)]
+        const comments = dieResult === 'bestial-fail' ? ["t'as faim"] : ["t'as pas faim"]
+        handleRoll({result: [{value: dieResult, selected: false}], reroll: false, comments, userName})
 	}
 
-    async function submitReroll(){
-        let {ppool, reroll} = getRerollInfo(rollResult)
-        await handleRoll({
-            userName,
-            hunger,
-            pool,
-            difficulty,
-            ppool,
-            reroll
+    async function submitReRoll(difficulty, userName){
+
+        rollResult.result.forEach(r => {
+            if(r.selected){
+                r.value = rollNormalDie()
+                r.selected = false
+            }
         })
+
+        const comments = getComments(rollResult.result, difficulty)
+
+        handleRoll({result: rollResult.result, reroll: false, comments, userName})        
     }
 
 	async function handleRoll(params){
-        let response = await fetch(`${backend}${toQueryString(params)}`)
-        let json = await response.json()
-        
-//        currentPool = [...json.result.hungerDice, ...json.result.normalDice]
 
-        setRollResult(json.result)
-        setRerollDisabled(true)
+        const queryParams = {
+            userName: (!params.userName || params.userName.length === 0) ? "quelqu'un" : params.userName,
+            result: params.result.map(d => d.value)
+        }
+
+        fetch(`${backend}/report${toQueryString(queryParams)}`)
+        
+        setRollResult(params)
+        setRerollDisabled(!params.reroll)
+        playDiceRollSound()
 	}	
+
+    console.log({
+        userName: userName,
+        pool: pool,
+        hunger: hunger,
+        difficulty: difficulty,
+        rerollDisabled: rerollDisabled,
+        rollResult: rollResult,
+        history: history,
+        muted: muted,
+    })
+
+    function onReRollSelect(die){
+        
+        if(die.selected){
+            die.selected = false
+        }else if(rollResult.result && rollResult.result.filter(d => d.selected).length < 3 && rollResult.reroll){
+            die.selected = true
+        }
+
+        setRollResult(Object.assign({}, rollResult))
+    }
+
+    function playDiceRollSound(){
+        let audio = document.getElementById('audio-dice-roll')
+        if(!muted){
+            audio.play()   
+        }
+    }
+
+    const connectionStatus = {
+        [ReadyState.CONNECTING]: 'Connecting',
+        [ReadyState.OPEN]: 'Open',
+        [ReadyState.CLOSING]: 'Closing',
+        [ReadyState.CLOSED]: 'Closed',
+        [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
+    }[readyState];
+    console.log(`The WebSocket is currently ${connectionStatus}`)
 
     return  (
     	<div id="roller">
-            <MuteButton state={muted} onClick={setMuted(!muted)}></MuteButton>
+            <MuteButton init={muted} onClick={(b) => setMuted(b)}></MuteButton>
 
-            <label for="input-username">User Name:</label>
-            <input type="text" name="username" onChange={(v) => setUserName(v)}></input>
+            <label htmlFor="input-username">User Name:</label>
+            <input type="text" name="username" onChange={(e) => setUserName(e.target.value)}></input>
 
-            <label for="select-pool">Dice Pool:</label>
-            <NumberSelect name="pool" range={[1,10]} value={pool} onChange={(v) => setPool(v)}/>
+            <label htmlFor="select-pool">Dice Pool:</label>
+            <NumberSelect name="pool" range={range(10, 1)} init={pool} onChange={(v) => setPool(v)}/>
 
-            <label for="select-pool">Hunger:</label>
-            <NumberSelect name="hunger" range={[0,5]} value={hunger} onChange={(v) => setHunger(v)}/>
+            <label htmlFor="select-pool">Hunger:</label>
+            <NumberSelect name="hunger" range={range(5)} init={hunger} onChange={(v) => setHunger(v)}/>
 
-            <label for="select-difficulty">Difficulty:</label>
-            <NumberSelect name="difficulty" range={[1,10]} value={difficulty} onChange={(v) => setDifficulty(v)}/>
+            <label htmlFor="select-difficulty">Difficulty:</label>
+            <NumberSelect name="difficulty" range={range(10)} init={difficulty} onChange={(v) => setDifficulty(v)}/>
 
-            <input id="submit-roll" type="button" value="Roll" name="button-roll" onclick={submitRoll}></input>
+            <input 
+                type="button"
+                value="Roll"
+                name="button-roll"
+                onClick={() => submitRoll(pool, hunger, difficulty, userName)}>
+            </input>
             
-            <input id="submit-hunger-test" type="button" value="Hunger Test" name="button-hunger" onclick={submitHunger}></input>
+            <input
+                type="button"
+                value="Hunger Test"
+                name="button-hunger"
+                onClick={() => submitHunger()}
+            ></input>
             
-            <RollDisplay id="main-display" onReRoll={submitReRoll}>{rollResult}</RollDisplay>
-            <HistoryDisplay id="history-display">{history}</HistoryDisplay>
+            <RollDisplay onClick={(die) => onReRollSelect(die)}>{rollResult}</RollDisplay>
+            {rollResult.reroll &&
+                <input type="button" value="Re-roll" name="button-reroll" 
+                    disabled={!rollResult.result.some(r => r.selected)}
+                    onClick={() => submitReRoll(difficulty, userName)} />
+            }
+            <HistoryDisplay >{history}</HistoryDisplay>
    	        
-   	        <WebsocketConnection endPoint={websocket}></WebsocketConnection>
 	        <audio id="audio-dice-roll">
     	        <source src={sound_effect} type="audio/mpeg"></source>
         	</audio>
