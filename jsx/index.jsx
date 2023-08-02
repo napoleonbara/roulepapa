@@ -13,7 +13,7 @@ ReactDOM.createRoot(head).render(<link rel="icon" type="image/x-icon" href={favi
 ReactDOM.createRoot(root).render(
     <VampireRoller
         backend='/api'
-        websocket={`ws://${window.location.host}/ws/vampire`}
+        websocket={`ws://${window.location.hostname}:8000/ws/vampire`}
         sound_effect='/sounds/dice-roll.mp3'
         images={{
             'bestial-fail':   '/images/bestial-fail.png',
