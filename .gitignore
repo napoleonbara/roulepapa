@@ -6,3 +6,9 @@ pyvenv.cfg
 node_modules
 
 js
+
+dist/*.png
+dist/*.ico
+dist/*.svg
+dist/*.txt
+dist/*.js
