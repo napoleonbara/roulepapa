@@ -145,7 +145,7 @@ export default function VampireRoller({
                 type="button"
                 value="Hunger Test"
                 name="button-hunger"
-                onClick={() => submitHunger()}
+                onClick={() => submitHunger(userName)}
             ></input>
             
             <RollDisplay onClick={(die) => onReRollSelect(die)}>{rollResult}</RollDisplay>
