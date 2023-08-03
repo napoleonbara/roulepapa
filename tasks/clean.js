@@ -3,7 +3,7 @@ const fs = require('fs');
 
 const targets = [
   'dist/*',
-  'js'
+  'src/js'
 ]
 
 for(wc of targets){

@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "transpile": "babel jsx --out-dir js",
+    "transpile": "babel src/jsx --out-dir src/js",
     "pack": "npx webpack --config webpack.config.js --mode development",
     "build": "npm run transpile && npm run pack",
-    "clean": "node ./clean.js"
+    "clean": "node ./tasks/clean.js",
+    "rebuild": "npm run clean && npm run build"
   },
   "author": "",
   "license": "ISC",

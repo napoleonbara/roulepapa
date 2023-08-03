@@ -5,6 +5,5 @@ pyvenv.cfg
 
 node_modules
 
-js
-
+src/js
 dist/*
