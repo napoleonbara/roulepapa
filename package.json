@@ -7,13 +7,15 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "transpile": "babel jsx --out-dir js",
     "pack": "npx webpack --config webpack.config.js --mode development",
-    "build": "npm run transpile && npm run pack"
+    "build": "npm run transpile && npm run pack",
+    "clean": "node ./clean.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-react": "^6.24.1",
+    "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

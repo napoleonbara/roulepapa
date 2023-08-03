@@ -1,4 +1,5 @@
 const path = require('path');
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   entry: './js/index.js',
@@ -13,9 +14,16 @@ module.exports = {
         use: ['style-loader', 'css-loader'],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif|ico)$/i,
+        test: /\.(png|svg|jpg|jpeg|gif|ico|mp3)$/i,
         type: 'asset/resource',
       },    
     ],
-  },  
+  },
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        { from: "html/vampire.html", to: "vampire.html" },
+      ],
+    }),
+  ],    
 };
